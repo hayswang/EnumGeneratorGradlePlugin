@@ -1,0 +1,51 @@
+project.ext {
+	projectDependencyMap = [:]
+	projectDependencyMap.put('junit:junit', 'junit:junit:+')
+	projectDependencyMap.put('org.mybatis.generator:mybatis-generator-core', 'org.mybatis.generator:mybatis-generator-core:+')
+	projectDependencyMap.put('org.mybatis:mybatis', 'org.mybatis:mybatis:+')
+	projectDependencyMap.put('mysql:mysql-connector-java', 'mysql:mysql-connector-java:+')
+	projectDependencyMap.put('x.flyspace:mybatis-generator-plugin-core', 'x.flyspace:mybatis-generator-plugin-core:+')
+	projectDependencyMap.put('com.fasterxml.jackson.core:jackson-databind', 'com.fasterxml.jackson.core:jackson-databind:+')
+	projectDependencyMap.put('org.apache.velocity:velocity', 'org.apache.velocity:velocity:+')
+}
+
+def dep(dependencyName) {
+	project.ext.projectDependencyMap[dependencyName]
+}
+
+def repos = getProperty('mavenPublish.uploadMavenRepository').split(',').collect {repo ->
+	def key = "mavenPublish.uploadMavenRepository.$repo"
+	def map = ['name': repo]
+	['url', 'type', 'userName', 'password'].each {map.put(it, getProperty("$key.$it"))}
+	map
+}
+
+allprojects {
+	apply plugin: 'maven'
+
+	group = 'x.flyspace'
+	version = '1.0-SNAPSHOT'
+	archivesBaseName = (project.rootProject.name + project.path).split(":").join("-")
+	repositories {
+		mavenLocal()
+		maven {url "http://mavenrepo.iwjw.flyspace.x:9081/nexus/content/groups/public"}
+		mavenCentral()
+	}
+
+	apply plugin: 'maven-publish'
+
+	publishing {
+		repositories {
+			repos.each {repo ->
+				maven() {
+					name repo['name']
+					url repo['url']
+					credentials {
+						username repo['userName']
+						password repo['password']
+					}
+				}
+			}
+		}
+	}
+}

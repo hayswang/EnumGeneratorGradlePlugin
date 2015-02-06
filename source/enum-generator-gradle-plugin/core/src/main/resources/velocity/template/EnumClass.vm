@@ -1,0 +1,62 @@
+package ${usedClasses.enumClass.typePackageName};
+
+#{foreach}($c in ${usedClasses.values()})
+import ${c};
+#{end}
+
+public enum ${usedClasses.enumClass.typeShortName} {
+#{foreach}($item in ${enumItems})
+/**
+	${item.comment}
+*/
+	${item.name},
+#{end}
+/**
+*/
+NULL
+;
+
+public static ${usedClasses.enumClass.typeShortName} from(String[] keys, Object[] values) {
+${usedClasses.enumClass.typeShortName} e =
+${usedClasses.enumUtil.typeShortName}.${enumUtilInfo.getEnumMethodName}(${usedClasses.enumClass.typeShortName}.class, keys, values);
+return e==null?NULL:e;
+}
+
+#{foreach}($thisFrom in ${fromMethods})
+public static ${usedClasses.enumClass.typeShortName} from${mixUtil.bigCamelJoin(${thisFrom},"And")}
+(
+	#{foreach}($indexKey in ${thisFrom})
+		${generateSettings[${indexKey}].typeShortName} ${indexKey}
+		#{if}(${foreach.hasNext}),#{end}
+	#{end}
+){
+return from(
+new String[]{
+	#{foreach}($indexKey in ${thisFrom})
+	"${indexKey}",
+	#{end}
+},
+new Object[]{
+	#{foreach}($indexKey in ${thisFrom})
+		${indexKey},
+	#{end}
+}
+);
+}
+#{end}
+
+public Object get(String key){
+return ${usedClasses.enumUtil.typeShortName}.${enumUtilInfo.getMethodName}(this, key);
+}
+
+#{foreach}($property in ${properties})
+public
+	${generateSettings[${property.name}].typeShortName}
+	${property.getMethodName}() {
+return
+(${generateSettings[${property.name}].typeShortName})
+	${usedClasses.enumUtil.typeShortName}.${enumUtilInfo.getMethodName}(this, "${property.name}");
+}
+#{end}
+
+}
